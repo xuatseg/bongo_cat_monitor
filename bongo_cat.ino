@@ -1,12 +1,33 @@
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
+#include <EEPROM.h>
 #include "Free_Fonts.h"
 #include "animations_sprites.h"
 
 // Display settings
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 320
+
+// Configuration settings structure
+struct BongoCatSettings {
+    bool show_cpu = true;
+    bool show_ram = true;
+    bool show_wpm = true;
+    bool show_time = true;
+    bool time_format_24h = true;
+    int sleep_timeout_minutes = 5;
+    float animation_sensitivity = 1.0;
+    uint32_t checksum = 0;  // For validation
+};
+
+// EEPROM settings
+#define SETTINGS_ADDRESS 0
+#define SETTINGS_SIZE sizeof(BongoCatSettings)
+#define EEPROM_SIZE 512  // ESP32 EEPROM size
+
+// Global settings instance
+BongoCatSettings settings;
 
 TFT_eSPI tft = TFT_eSPI();
 
@@ -79,14 +100,126 @@ void updateSystemStats(int cpu, int ram, int wpm) {
 // Update time display  
 void updateTimeDisplay() {
     if (time_label && current_time_str.length() > 0) {
-        lv_label_set_text(time_label, current_time_str.c_str());
+        String display_time = current_time_str;
+        
+        // Convert to 12-hour format if needed
+        if (!settings.time_format_24h && current_time_str.length() == 5) {
+            int hour = current_time_str.substring(0, 2).toInt();
+            String minute = current_time_str.substring(3, 5);
+            String ampm = (hour >= 12) ? "PM" : "AM";
+            
+            if (hour == 0) hour = 12;      // 00:xx -> 12:xx AM
+            else if (hour > 12) hour -= 12; // 13:xx -> 1:xx PM
+            
+            display_time = String(hour) + ":" + minute + " " + ampm;
+        }
+        
+        lv_label_set_text(time_label, display_time.c_str());
         
         // Debug output for time updates
         if (!time_initialized) {
             Serial.print("🕐 Time initialized: ");
-            Serial.println(current_time_str);
+            Serial.println(display_time);
             time_initialized = true;
         }
+    }
+}
+
+// Settings management functions
+uint32_t calculateChecksum(const BongoCatSettings* s) {
+    // Simple checksum calculation (excluding checksum field itself)
+    uint32_t sum = 0;
+    const uint8_t* data = (const uint8_t*)s;
+    size_t size = sizeof(BongoCatSettings) - sizeof(uint32_t); // Exclude checksum field
+    
+    for (size_t i = 0; i < size; i++) {
+        sum += data[i];
+    }
+    return sum;
+}
+
+bool validateSettings(const BongoCatSettings* s) {
+    // Check if settings are within valid ranges
+    if (s->sleep_timeout_minutes < 1 || s->sleep_timeout_minutes > 60) return false;
+    if (s->animation_sensitivity < 0.1 || s->animation_sensitivity > 5.0) return false;
+    
+    // Check if checksum matches
+    uint32_t expected_checksum = calculateChecksum(s);
+    return (s->checksum == expected_checksum);
+}
+
+void saveSettings() {
+    settings.checksum = calculateChecksum(&settings);
+    EEPROM.put(SETTINGS_ADDRESS, settings);
+    EEPROM.commit();
+    Serial.println("💾 Settings saved to EEPROM");
+}
+
+void loadSettings() {
+    BongoCatSettings temp_settings;
+    EEPROM.get(SETTINGS_ADDRESS, temp_settings);
+    
+    if (validateSettings(&temp_settings)) {
+        settings = temp_settings;
+        Serial.println("📂 Settings loaded from EEPROM");
+        // Note: updateDisplayVisibility() will be called after UI creation
+    } else {
+        Serial.println("⚠️ Invalid settings in EEPROM, using defaults");
+        resetSettings();
+    }
+}
+
+void resetSettings() {
+    // Reset to default values
+    settings.show_cpu = true;
+    settings.show_ram = true;
+    settings.show_wpm = true;
+    settings.show_time = true;
+    settings.time_format_24h = true;
+    settings.sleep_timeout_minutes = 5;
+    settings.animation_sensitivity = 1.0;
+    settings.checksum = calculateChecksum(&settings);
+    
+    Serial.println("🔄 Settings reset to factory defaults");
+    // Note: updateDisplayVisibility() will be called after UI creation if needed
+}
+
+void updateDisplayVisibility() {
+    // Show/hide labels based on settings (only if UI is created)
+    if (cpu_label) {
+        if (settings.show_cpu) {
+            lv_obj_clear_flag(cpu_label, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(cpu_label, LV_OBJ_FLAG_HIDDEN);
+        }
+        Serial.println("🖥️ CPU visibility updated: " + String(settings.show_cpu ? "ON" : "OFF"));
+    }
+    
+    if (ram_label) {
+        if (settings.show_ram) {
+            lv_obj_clear_flag(ram_label, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ram_label, LV_OBJ_FLAG_HIDDEN);
+        }
+        Serial.println("💾 RAM visibility updated: " + String(settings.show_ram ? "ON" : "OFF"));
+    }
+    
+    if (wpm_label) {
+        if (settings.show_wpm) {
+            lv_obj_clear_flag(wpm_label, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(wpm_label, LV_OBJ_FLAG_HIDDEN);
+        }
+        Serial.println("⌨️ WPM visibility updated: " + String(settings.show_wpm ? "ON" : "OFF"));
+    }
+    
+    if (time_label) {
+        if (settings.show_time) {
+            lv_obj_clear_flag(time_label, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(time_label, LV_OBJ_FLAG_HIDDEN);
+        }
+        Serial.println("🕐 Time visibility updated: " + String(settings.show_time ? "ON" : "OFF"));
     }
 }
 
@@ -226,6 +359,67 @@ void handleSerialCommands() {
                 sprite_manager_set_state(&sprite_manager, ANIM_STATE_EAR_TWITCH, current_time);
             }
             Serial.println("PONG");
+            
+        // NEW CONFIGURATION COMMANDS
+        } else if (command.startsWith("DISPLAY_CPU:")) {
+            String value = command.substring(12);
+            settings.show_cpu = (value == "ON");
+            updateDisplayVisibility();
+            Serial.println("🖥️ CPU display: " + value);
+            
+        } else if (command.startsWith("DISPLAY_RAM:")) {
+            String value = command.substring(12);
+            settings.show_ram = (value == "ON");
+            updateDisplayVisibility();
+            Serial.println("💾 RAM display: " + value);
+            
+        } else if (command.startsWith("DISPLAY_WPM:")) {
+            String value = command.substring(12);
+            settings.show_wpm = (value == "ON");
+            updateDisplayVisibility();
+            Serial.println("⌨️ WPM display: " + value);
+            
+        } else if (command.startsWith("DISPLAY_TIME:")) {
+            String value = command.substring(13);
+            settings.show_time = (value == "ON");
+            updateDisplayVisibility();
+            Serial.println("🕐 Time display: " + value);
+            
+        } else if (command.startsWith("TIME_FORMAT:")) {
+            String format = command.substring(12);
+            settings.time_format_24h = (format == "24");
+            Serial.println("🕐 Time format: " + format + " hour");
+            
+        } else if (command.startsWith("SLEEP_TIMEOUT:")) {
+            int timeout = command.substring(14).toInt();
+            if (timeout >= 1 && timeout <= 60) {
+                settings.sleep_timeout_minutes = timeout;
+                Serial.println("😴 Sleep timeout: " + String(timeout) + " minutes");
+            } else {
+                Serial.println("❌ Invalid sleep timeout (1-60 minutes)");
+            }
+            
+        } else if (command.startsWith("SENSITIVITY:")) {
+            float sensitivity = command.substring(12).toFloat();
+            if (sensitivity >= 0.1 && sensitivity <= 5.0) {
+                settings.animation_sensitivity = sensitivity;
+                Serial.println("🎚️ Animation sensitivity: " + String(sensitivity));
+            } else {
+                Serial.println("❌ Invalid sensitivity (0.1-5.0)");
+            }
+            
+        } else if (command == "SAVE_SETTINGS") {
+            saveSettings();
+            
+        } else if (command == "LOAD_SETTINGS") {
+            loadSettings();
+            updateDisplayVisibility();  // Apply the loaded settings immediately
+            
+        } else if (command == "RESET_SETTINGS") {
+            resetSettings();
+            updateDisplayVisibility();  // Apply the reset settings immediately
+            saveSettings();  // Save defaults to EEPROM
+            Serial.println("🔄 Settings reset and saved");
         }
     }
 }
@@ -265,6 +459,35 @@ void sprite_manager_init(sprite_manager_t* manager) {
     Serial.println("🐱 Sprite manager initialized");
 }
 
+// Calculate adaptive sleep stage timing based on user's timeout setting
+void calculateSleepStageTiming(int timeout_minutes, unsigned long* stage1_ms, unsigned long* stage2_ms, unsigned long* stage3_ms) {
+    unsigned long total_ms = (unsigned long)timeout_minutes * 60 * 1000;
+    
+    // Define minimums and maximums for each stage
+    unsigned long min_stage2 = 5000;   // 5 seconds minimum
+    unsigned long max_stage2 = 60000;  // 1 minute maximum
+    unsigned long min_stage3 = 3000;   // 3 seconds minimum  
+    unsigned long max_stage3 = 30000;  // 30 seconds maximum
+    
+    // Calculate based on timeout range for optimal user experience
+    if (timeout_minutes <= 3) {
+        // Short timeouts: quick but visible progression
+        *stage2_ms = max(min_stage2, min(max_stage2, (unsigned long)(total_ms * 0.25)));
+        *stage3_ms = max(min_stage3, min(max_stage3, (unsigned long)(total_ms * 0.15)));
+    } else if (timeout_minutes <= 10) {
+        // Medium timeouts: balanced progression
+        *stage2_ms = max(min_stage2, min(max_stage2, (unsigned long)(total_ms * 0.20)));
+        *stage3_ms = max(min_stage3, min(max_stage3, (unsigned long)(total_ms * 0.10)));
+    } else {
+        // Long timeouts: mostly normal, quick sleep transition
+        *stage2_ms = max(min_stage2, min(max_stage2, (unsigned long)(total_ms * 0.15)));
+        *stage3_ms = max(min_stage3, min(max_stage3, (unsigned long)(total_ms * 0.05)));
+    }
+    
+    // Stage 1 gets the remainder to ensure total equals user setting
+    *stage1_ms = total_ms - *stage2_ms - *stage3_ms;
+}
+
 void sprite_manager_update(sprite_manager_t* manager, uint32_t current_time) {
     // Check for typing timeout (Arduino-side safety)
     if (manager->paw_animation_active && manager->last_typing_time > 0) {
@@ -285,16 +508,20 @@ void sprite_manager_update(sprite_manager_t* manager, uint32_t current_time) {
     
     // Handle automatic idle progression only if enabled
     if (manager->idle_progression_enabled || !python_control_mode) {
+        // Calculate adaptive timing based on current sleep timeout setting
+        unsigned long stage1_duration, stage2_duration, stage3_duration;
+        calculateSleepStageTiming(settings.sleep_timeout_minutes, &stage1_duration, &stage2_duration, &stage3_duration);
+        
         if (manager->current_state == ANIM_STATE_IDLE_STAGE1) {
-            if (current_time - manager->state_start_time > 3000) { // 3 seconds
+            if (current_time - manager->state_start_time > stage1_duration) {
                 sprite_manager_set_state(manager, ANIM_STATE_IDLE_STAGE2, current_time);
             }
         } else if (manager->current_state == ANIM_STATE_IDLE_STAGE2) {
-            if (current_time - manager->state_start_time > 5000) { // 5 seconds  
+            if (current_time - manager->state_start_time > stage2_duration) {
                 sprite_manager_set_state(manager, ANIM_STATE_IDLE_STAGE3, current_time);
             }
         } else if (manager->current_state == ANIM_STATE_IDLE_STAGE3) {
-            if (current_time - manager->state_start_time > 7000) { // 7 seconds
+            if (current_time - manager->state_start_time > stage3_duration) {
                 sprite_manager_set_state(manager, ANIM_STATE_IDLE_STAGE4, current_time);
             }
         }
@@ -564,6 +791,12 @@ void setup() {
     Serial.begin(115200);
     Serial.println("🐱 Bongo Cat with Sprites Starting...");
     
+    // Initialize EEPROM for settings persistence
+    EEPROM.begin(EEPROM_SIZE);
+    
+    // Load settings from EEPROM (will use defaults if invalid)
+    loadSettings();
+    
     // Initialize random seed for animations
     randomSeed(analogRead(0));
     
@@ -587,6 +820,9 @@ void setup() {
     sprite_manager_init(&sprite_manager);
     
     createBongoCat();
+    
+    // Apply loaded settings to display visibility now that UI is created
+    updateDisplayVisibility();
     
     Serial.println("✅ Bongo Cat Ready!");
 }
