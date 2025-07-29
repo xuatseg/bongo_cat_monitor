@@ -1,0 +1,28 @@
+{
+  "name": "Bongo Cat ESP32",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "build/esp32.esp32.esp32/bongo_cat.ino.bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "build/esp32.esp32.esp32/bongo_cat.ino.partitions.bin",
+          "offset": 32768
+        },
+        {
+          "path": "build/esp32.esp32.esp32/boot_app0.bin", 
+          "offset": 57344
+        },
+        {
+          "path": "build/esp32.esp32.esp32/bongo_cat.ino.bin",
+          "offset": 65536
+        }
+      ]
+    }
+  ]
+} 

@@ -34,7 +34,7 @@ class BongoCatEngine:
             # idle_timeout = time to stop typing animation (quick response)
             self.idle_timeout = behavior_settings.get('idle_timeout_seconds', 1.0)
             # sleep_timeout = time to start sleep progression (user-configurable)
-            self.sleep_timeout = behavior_settings.get('sleep_timeout_minutes', 5) * 60  # Convert to seconds
+            self.sleep_timeout = behavior_settings.get('sleep_timeout_minutes', 1) * 60  # Convert to seconds
             print(f"⏰ Timeouts: Idle={self.idle_timeout}s, Sleep={self.sleep_timeout}s")
             
             # Register for configuration changes
@@ -44,6 +44,7 @@ class BongoCatEngine:
             self.port = 'AUTO'
             self.baudrate = 115200
             self.idle_timeout = 1.0  # Original script value
+            self.sleep_timeout = 60  # Default 1 minute sleep timeout when no config
             
         self.serial_conn = None
         self.running = False
@@ -56,9 +57,10 @@ class BongoCatEngine:
         
         # EXACT ORIGINAL IMPLEMENTATION - Proper keystroke detection and timing
         self.keystroke_buffer = deque(maxlen=50)  # Store recent keystrokes
-        self.last_keystroke_time = 0
+        current_time = time.time()
+        self.last_keystroke_time = current_time  # Initialize to current time to prevent huge time difference
         self.typing_active = False
-        self.idle_start_time = 0
+        self.idle_start_time = current_time  # Initialize to current time so sleep detection works immediately
         self.sleep_start_time = None  # Track when we entered sleep mode
         
         # EXACT ORIGINAL IMPLEMENTATION - Improved WPM calculation with stability optimizations
@@ -554,6 +556,7 @@ class BongoCatEngine:
                 # Mark as actively typing
                 if not self.typing_active:
                     self.typing_active = True
+                    self.sleep_start_time = None  # Reset sleep timer when typing resumes
                     print("⌨️ Typing started - keyboard listener working on main thread!")
                     # Update tray typing status
                     if self.tray:
@@ -842,7 +845,7 @@ class BongoCatEngine:
             
             # Apply behavior settings with delays
             behavior = self.config.get_behavior_settings()
-            self.send_command(f"SLEEP_TIMEOUT:{behavior.get('sleep_timeout_minutes', 5)}")
+            self.send_command(f"SLEEP_TIMEOUT:{behavior.get('sleep_timeout_minutes', 1)}")
             time.sleep(0.5)  # Longer delay before save
             
             # Save settings to Arduino EEPROM

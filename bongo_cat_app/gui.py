@@ -185,12 +185,12 @@ class BongoCatSettingsGUI:
         timeout_frame = ttk.Frame(sleep_group)
         timeout_frame.pack(fill='x', pady=(0, 10))
         
-        self.widgets['sleep_timeout'] = tk.IntVar(value=5)
+        self.widgets['sleep_timeout'] = tk.IntVar(value=1)
         self.widgets['sleep_scale'] = ttk.Scale(timeout_frame, from_=1, to=60, orient='horizontal',
                                                variable=self.widgets['sleep_timeout'], command=self.on_sleep_timeout_changed)
         self.widgets['sleep_scale'].pack(side='left', fill='x', expand=True, padx=(0, 10))
         
-        self.widgets['sleep_label'] = ttk.Label(timeout_frame, text="5 minutes", width=12)
+        self.widgets['sleep_label'] = ttk.Label(timeout_frame, text="1 minute", width=12)
         self.widgets['sleep_label'].pack(side='right')
         
         # Animation settings  
@@ -348,7 +348,7 @@ class BongoCatSettingsGUI:
             
             # Load behavior settings
             behavior = self.config.get_behavior_settings()
-            self.widgets['sleep_timeout'].set(behavior.get('sleep_timeout_minutes', 5))
+            self.widgets['sleep_timeout'].set(behavior.get('sleep_timeout_minutes', 1))
     
             self.widgets['idle_timeout'].set(behavior.get('idle_timeout_seconds', 3.0))
             

@@ -36,7 +36,7 @@ class ConfigManager:
                 "time_format_24h": True
             },
             "behavior": {
-                "sleep_timeout_minutes": 5,
+                "sleep_timeout_minutes": 1,
                 "idle_timeout_seconds": 1.0
             },
             "connection": {
