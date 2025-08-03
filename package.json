@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "electron-reload": "^2.0.0-alpha.1"
+  }
+}

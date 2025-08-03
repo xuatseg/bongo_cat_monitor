@@ -42,11 +42,13 @@ This board includes:
 3. Select your ESP32 board and upload
 
 ### PC Application Setup
-1. **Download** the PC application from `BongoCat_Release/BongoCat_Setup.exe`
-2. **Install** and run the application
-3. The app will **automatically find and connect** to your ESP32 board
-4. **Check system tray** - the app runs in the background
-5. **Right-click tray icon** to access settings and configure display options
+1. **Download** the PC application archive: `BongoCat_v1.0.0_Windows.zip`
+2. **Extract** the ZIP file to a temporary folder
+3. **Run** `BongoCat_Setup.exe` from the extracted files
+4. **Install** and run the application
+5. The app will **automatically find and connect** to your ESP32 board
+6. **Check system tray** - the app runs in the background
+7. **Right-click tray icon** to access settings and configure display options
 
 ## 📁 Project Structure
 
@@ -178,14 +180,9 @@ Customize your Bongo Cat experience:
 - **Animation Speed**: Adjust responsiveness
 - **Connection Settings**: COM port configuration
 
-## 🛠️ 3D Printing (Coming Soon)
+## 🛠️ 3D Printing 
 
-We're working on custom case designs for your Bongo Cat:
-
-- **Material**: PLA recommended
-- **Supports**: Minimal supports needed
-- **Print Time**: Approximately 2-3 hours
-- **File Format**: .3mf files for easy printing
+You can download a standing case fot the board either from makerworld or from 3D printing folder of this repo
 
 ## 📡 Communication Protocol
 

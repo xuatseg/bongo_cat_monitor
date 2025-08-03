@@ -1,0 +1,19 @@
+Bongo Cat ESP32 Desktop Application
+Version: 1.0.0
+Build Date: 2024
+Platform: Windows 64-bit
+
+📦 Package Contents:
+- BongoCat_Setup.exe (Main installer)
+- INSTALLATION.md (Setup guide)
+- README.md (Project overview)
+- LICENSE.txt (MIT License)
+- VERSION.txt (This file)
+
+🌐 Links:
+- Web Flasher: https://vostoklabs.github.io/Bongo_cat_webflasher/
+- Source Code: https://github.com/vostoklabs/bongo_cat_monitor/
+- Hardware Guide: See main README.md
+
+---
+For support and updates, visit our GitHub repository.

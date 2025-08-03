@@ -1,0 +1,27 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.bongocat.electron
+productName: Bongo Cat
+files:
+  - filter:
+      - main.js
+      - preload.js
+      - renderer/**/*
+      - src/**/*
+      - assets/**/*
+      - node_modules/**/*
+mac:
+  category: public.app-category.utilities
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+win:
+  target: nsis
+linux:
+  target: AppImage
+electronVersion: 28.3.3

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Required for serial port access -->
+	<key>com.apple.security.device.serial</key>
+	<true/>
+	
+	<!-- Required for USB device access -->
+	<key>com.apple.security.device.usb</key>
+	<true/>
+	
+	<!-- Required for system monitoring (CPU, RAM) -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+	
+	<!-- Required for global keyboard monitoring -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+	
+	<!-- Required for accessing system information -->
+	<key>com.apple.security.personal-information.system-information</key>
+	<true/>
+	
+	<!-- Network access (if needed for future updates) -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	
+	<!-- Disable app sandbox for full system access -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+	
+	<!-- Allow unsigned executable memory (for Node.js) -->
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+	
+	<!-- Allow DYLD environment variables -->
+	<key>com.apple.security.cs.allow-dyld-environment-variables</key>
+	<true/>
+	
+	<!-- Disable library validation -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>

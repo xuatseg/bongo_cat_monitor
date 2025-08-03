@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>Bongo Cat - ESP32 Companion</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <h1>🐱 Bongo Cat</h1>
+                <p class="subtitle">ESP32 Desktop Companion</p>
+            </div>
+            <div class="status-indicator" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Connection Section -->
+            <section class="card">
+                <h2>📡 Device Connection</h2>
+                <div class="connection-controls">
+                    <select id="portSelect" class="port-select">
+                        <option value="">Select ESP32 Port...</option>
+                    </select>
+                    <button id="connectBtn" class="btn btn-primary">Connect</button>
+                    <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+                </div>
+                <div class="connection-info" id="connectionInfo">
+                    <p>Select a port and click Connect to start monitoring</p>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="card">
+                <h2>📊 Live Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <label>Typing Speed</label>
+                        <span class="stat-value" id="wpmValue">0 WPM</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>CPU Usage</label>
+                        <span class="stat-value" id="cpuValue">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>RAM Usage</label>
+                        <span class="stat-value" id="ramValue">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>Current Time</label>
+                        <span class="stat-value" id="timeValue">--:--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Controls Section -->
+            <section class="card">
+                <h2>⚙️ Controls</h2>
+                <div class="control-buttons">
+                    <button id="settingsBtn" class="btn btn-secondary">
+                        🔧 Display Settings
+                    </button>
+                </div>
+            </section>
+
+
+        </main>
+
+        <!-- Settings Modal (hidden by default) -->
+        <div class="modal" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ Settings</h2>
+                    <button class="modal-close" id="closeSettings">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h3>📺 Display Settings</h3>
+                    <div class="settings-section">
+                        <div class="setting-group">
+                            <label for="showCpu">Show CPU Usage</label>
+                            <input type="checkbox" id="showCpu" checked>
+                        </div>
+                        <div class="setting-group">
+                            <label for="showRam">Show RAM Usage</label>
+                            <input type="checkbox" id="showRam" checked>
+                        </div>
+                        <div class="setting-group">
+                            <label for="showWpm">Show WPM (Typing Speed)</label>
+                            <input type="checkbox" id="showWpm" checked>
+                        </div>
+                        <div class="setting-group">
+                            <label for="showTime">Show Current Time</label>
+                            <input type="checkbox" id="showTime" checked>
+                        </div>
+                        <div class="setting-group">
+                            <label for="timeFormat">Time Format</label>
+                            <select id="timeFormat" class="setting-select">
+                                <option value="12">12-hour (AM/PM)</option>
+                                <option value="24">24-hour</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3>😴 Sleep Settings</h3>
+                    <div class="settings-section">
+                        <div class="setting-group">
+                            <label for="sleepTimeout">Cat Sleep Timeout (minutes)</label>
+                            <input type="number" id="sleepTimeout" min="1" max="60" value="5">
+                            <small class="help-text">How long to wait before cat goes to sleep when no typing detected</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" id="applySettings">Apply</button>
+                    <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+                    <button class="btn btn-secondary" id="resetSettings">Reset to Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
