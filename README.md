@@ -12,8 +12,19 @@ Bongo Cat is a cute digital pet that lives on your desk and types along with you
 - **Multiple Animations** - Various cute expressions and movements
 - **Sleep Mode** - Cat goes to sleep when you're not active
 - **Customizable Settings** - Adjust display preferences and behavior
+- **Cross-Platform** - **🆕 Now available on Mac!** Windows and macOS support
 - **Open Source** - Complete source code available
 - **Easy Assembly** - No soldering required, around $10 to build
+
+## 🎉 **NEW: Mac Support Available!** 
+
+🍎 **Mac users can now enjoy Bongo Cat!** We've added full macOS support with:
+- **Native Mac app** - Download and install like any other Mac application
+- **Universal binary** - Works on both Intel and Apple Silicon Macs
+- **Easy installation** - Simple drag-and-drop setup with step-by-step guide
+- **Proper permissions** - Seamless integration with macOS security
+
+📥 **[Download for Mac](https://github.com/vostoklabs/bongo_cat_monitor/releases)** | 📖 **[Mac Installation Guide](bongo-cat-electron/MAC_USER_GUIDE.md)**
 
 ## 🛒 Hardware Requirements
 
@@ -41,7 +52,14 @@ This board includes:
 2. Install required libraries (see Configuration section)
 3. Select your ESP32 board and upload
 
-### PC Application Setup
+### Desktop Application Setup
+
+#### 🍎 For Mac Users
+1. **Download** the Mac DMG file from [GitHub Releases](https://github.com/vostoklabs/bongo_cat_monitor/releases)
+2. **Follow** our detailed [Mac Installation Guide](bongo-cat-electron/MAC_USER_GUIDE.md)
+3. **Enjoy** your Bongo Cat with native Mac integration!
+
+#### 🪟 For Windows Users  
 1. **Download** the PC application archive: `BongoCat_v1.0.0_Windows.zip`
 2. **Extract** the ZIP file to a temporary folder
 3. **Run** `BongoCat_Setup.exe` from the extracted files
@@ -60,13 +78,19 @@ This board includes:
 │   ├── 📁 effects/            # Special effects (clicks, sleep)
 │   ├── 📁 table/              # Table/background elements
 │   └── 📄 Animation guidelines.md
-├── 📁 bongo_cat_app/          # Desktop companion application
+├── 📁 bongo_cat_app/          # Desktop companion application (Windows)
 │   ├── 📄 main.py             # Application entry point
 │   ├── 📄 engine.py           # Core logic and serial communication
 │   ├── 📄 gui.py              # Settings GUI
 │   ├── 📄 tray.py             # System tray functionality
 │   ├── 📄 config.py           # Configuration management
 │   └── 📄 requirements_app.txt
+├── 📁 bongo-cat-electron/     # 🆕 Cross-platform Electron app (Mac & Windows)
+│   ├── 📄 main.js             # Main Electron process
+│   ├── 📄 MAC_USER_GUIDE.md   # Step-by-step Mac installation guide
+│   ├── 📁 renderer/           # UI components
+│   ├── 📁 src/                # Core functionality modules
+│   └── 📄 package.json        # Dependencies and build configuration
 ├── 📁 BongoCat_Release/       # Windows installer package
 │   ├── 📄 BongoCat_Setup.exe  # Ready-to-install executable
 │   ├── 📄 README.md           # Installation instructions
