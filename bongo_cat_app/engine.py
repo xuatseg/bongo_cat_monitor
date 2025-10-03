@@ -171,7 +171,7 @@ class BongoCatEngine:
         print("✅ Configuration applied to Arduino")
 
     def find_esp32_port(self):
-        """Auto-detect ESP32 COM port - EXACT ORIGINAL IMPLEMENTATION"""
+        """Auto-detect ESP32 COM port - Enhanced for macOS compatibility"""
         print("🔍 Scanning for ESP32...")
         
         ports = serial.tools.list_ports.comports()
@@ -191,12 +191,31 @@ class BongoCatEngine:
             
             description = str(port.description).upper()
             manufacturer = str(port.manufacturer).upper() if port.manufacturer else ""
+            device_path = str(port.device).lower()
             
+            # Method 1: Check for ESP32 keywords in description/manufacturer
+            found_by_keyword = False
             for keyword in esp32_keywords:
                 if keyword.upper() in description or keyword.upper() in manufacturer:
                     esp32_ports.append(port)
-                    print(f"🎯 Found potential ESP32: {port.device} - {port.description}")
+                    print(f"🎯 Found potential ESP32 (by keyword): {port.device} - {port.description}")
+                    found_by_keyword = True
                     break
+            
+            # Method 2: Check for common macOS serial port patterns (if not found by keyword)
+            if not found_by_keyword:
+                # Common macOS serial port patterns for ESP32 devices
+                macos_patterns = [
+                    'usbserial',  # /dev/cu.usbserial-*
+                    'usbmodem',   # /dev/cu.usbmodem*
+                    'tty.usb',    # /dev/tty.usb*
+                ]
+                
+                for pattern in macos_patterns:
+                    if pattern in device_path:
+                        esp32_ports.append(port)
+                        print(f"🎯 Found potential ESP32 (by pattern): {port.device} - {port.description}")
+                        break
         
         if not esp32_ports:
             print("❌ No ESP32 found automatically")
