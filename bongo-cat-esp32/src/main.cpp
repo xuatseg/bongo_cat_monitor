@@ -1,13 +1,19 @@
+#include <Arduino.h>
+#include <HardwareSerial.h>
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
 #include <EEPROM.h>
 #include "Free_Fonts.h"
 #include "animations_sprites.h"
+#include "touch_screen_lib.h"
 
 // Display settings
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 320
+
+// Touch screen settings
+#define TOUCH_THRESHOLD 40
 
 // Configuration settings structure
 struct BongoCatSettings {
@@ -29,7 +35,17 @@ struct BongoCatSettings {
 // Global settings instance
 BongoCatSettings settings;
 
+// Forward declarations
+void resetSettings();
+void createBongoCat();
+const char* get_state_name(animation_state_t state);
+void initTouchScreen();
+void readTouchScreen();
+
 TFT_eSPI tft = TFT_eSPI();
+
+// Touch screen library object
+TouchScreenLib touchScreen(&tft);
 
 // LVGL display buffer
 static lv_disp_draw_buf_t draw_buf;
@@ -69,12 +85,26 @@ bool time_initialized = false;  // Track if we've received time from Python
 
 // Function to flush the display buffer
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
+    static bool first_flush = true;
+    if (first_flush) {
+        Serial.println("🖼️ First flush callback triggered!");
+        Serial.print("🖼️ Area: x1=");
+        Serial.print(area->x1);
+        Serial.print(" y1=");
+        Serial.print(area->y1);
+        Serial.print(" x2=");
+        Serial.print(area->x2);
+        Serial.print(" y2=");
+        Serial.println(area->y2);
+        first_flush = false;
+    }
+    
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors((uint16_t*)&color_p->full, w * h, true);
+    tft.pushColors((uint16_t*)color_p, w * h, true);
     tft.endWrite();
 
     lv_disp_flush_ready(disp);
@@ -800,10 +830,24 @@ void setup() {
     // Initialize random seed for animations
     randomSeed(analogRead(0));
     
-    tft.init();
-    tft.setRotation(0);
-    tft.fillScreen(TFT_WHITE);  // White background
+    // Initialize backlight pin
+    #ifdef TFT_BL
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH); // Turn on backlight
+    Serial.println("🔦 Backlight initialized on pin " + String(TFT_BL));
+    #else
+    Serial.println("⚠️ TFT_BL not defined!");
+    #endif
     
+    Serial.println("📺 Initializing TFT display...");
+    tft.init();
+    Serial.println("📺 TFT initialized, setting rotation...");
+    tft.setRotation(0);
+    Serial.println("📺 Filling screen white...");
+    tft.fillScreen(TFT_WHITE);  // White background
+    Serial.println("📺 Screen filled!");
+    
+    Serial.println("🎨 Initializing LVGL...");
     lv_init();
     
     lv_disp_draw_buf_init(&draw_buf, buf, NULL, SCREEN_WIDTH * 10);
@@ -819,6 +863,9 @@ void setup() {
     // Initialize sprite manager
     sprite_manager_init(&sprite_manager);
     
+    // Initialize touch screen
+    initTouchScreen();
+    
     createBongoCat();
     
     // Apply loaded settings to display visibility now that UI is created
@@ -828,9 +875,11 @@ void setup() {
 }
 
 void createBongoCat() {
+    Serial.println("🎨 Creating Bongo Cat UI...");
     screen = lv_scr_act();
     
     // Set white background
+    Serial.println("🎨 Setting background color...");
     lv_obj_set_style_bg_color(screen, lv_color_white(), 0);
     
     // Create cat canvas with proper sizing
@@ -848,11 +897,13 @@ void createBongoCat() {
     lv_obj_align(cat_canvas, LV_ALIGN_CENTER, 12, 50);  // 12px right (3 cat pixels), 50px lower
     
     // Create system stats labels (top left) with pixelated font
+    Serial.println("🎨 Creating labels...");
     cpu_label = lv_label_create(screen);
     lv_label_set_text(cpu_label, "CPU: 0%");
     lv_obj_set_style_text_font(cpu_label, &lv_font_unscii_16, 0);
     lv_obj_set_style_text_color(cpu_label, lv_color_black(), 0);
     lv_obj_align(cpu_label, LV_ALIGN_TOP_LEFT, 5, 5);
+    Serial.println("🎨 CPU label created");
     
     ram_label = lv_label_create(screen);
     lv_label_set_text(ram_label, "RAM: 0%");
@@ -874,11 +925,16 @@ void createBongoCat() {
     lv_obj_align(time_label, LV_ALIGN_TOP_RIGHT, -5, 5);
     
     // Initial render
+    Serial.println("🎨 Rendering initial sprite...");
     sprite_render_layers(&sprite_manager, cat_canvas, millis());
+    Serial.println("🎨 UI creation complete!");
 }
 
 void loop() {
     handleSerialCommands();
+    
+    // Read touch screen input
+    readTouchScreen();
     
     uint32_t current_time = millis();
     
@@ -920,4 +976,43 @@ void loop() {
     }
     
     delay(2);  // Reduced from 5ms for better responsiveness
+}
+
+// Touch screen functions
+void initTouchScreen() {
+    Serial.println("🔘 Initializing touch screen...");
+    
+    // 初始化触摸屏库
+    if (touchScreen.init()) {
+        Serial.println("✅ Touch screen initialized successfully!");
+        
+        // 设置校准数据（从官方例子获取）
+        uint16_t calData[5] = { 328, 3443, 365, 3499, 3 };
+        touchScreen.setCalibration(calData);
+        
+        // 启用调试输出
+        touchScreen.setDebugOutput(true);
+        
+        Serial.println("🔘 Touch screen ready for use!");
+    } else {
+        Serial.println("❌ Touch screen initialization failed!");
+    }
+}
+
+void readTouchScreen() {
+    uint16_t x, y, pressure;
+    
+    // 读取触摸坐标
+    if (touchScreen.readTouch(&x, &y, &pressure)) {
+        // 输出触摸坐标到串口
+        Serial.print("🔘 Touch: X=");
+        Serial.print(x);
+        Serial.print(", Y=");
+        Serial.print(y);
+        Serial.print(", Pressure: ");
+        Serial.println(pressure);
+        
+        // 可以在这里添加触摸事件处理逻辑
+        // 例如：检查触摸位置，执行相应操作
+    }
 } 

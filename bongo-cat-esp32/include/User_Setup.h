@@ -78,12 +78,12 @@
 // #define TFT_WIDTH  80
 // #define TFT_WIDTH  128
 // #define TFT_WIDTH  128 // ST7789 240 x 240 and 240 x 320
-#define TFT_WIDTH  320
+#define TFT_WIDTH  240
 // #define TFT_WIDTH  320
 // #define TFT_HEIGHT 160
 // #define TFT_HEIGHT 128
 //#define TFT_HEIGHT 160 // ST7789 240 x 240
-#define TFT_HEIGHT 240 // ST7789 240 x 320
+#define TFT_HEIGHT 320 // ST7789 240 x 320
 // #define TFT_HEIGHT 240 // GC9A01 240 x 240 //#define TFT_HEIGHT 480
 //#define TFT_HEIGHT 480 // 
 
@@ -123,8 +123,8 @@
 // driven with a PWM signal or turned OFF/ON then this must be handled by the user
 // sketch. e.g. with digitalWrite(TFT_BL, LOW);
 
- #define TFT_BL   27            // LED back-light control pin
- #define TFT_BACKLIGHT_ON HIGH  // Level to turn ON back-light (HIGH or LOW)
+// #define TFT_BL   27            // LED back-light control pin (defined below for ESP32)
+// #define TFT_BACKLIGHT_ON HIGH  // Level to turn ON back-light (HIGH or LOW)
 
 
 

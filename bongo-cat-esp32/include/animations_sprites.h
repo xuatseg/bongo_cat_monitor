@@ -17,29 +17,29 @@
 #endif
 
 // Body sprites
-#include "animations/body/standardbody1.c"
-#include "animations/body/bodyeartwitch.c"
+#include "../lib/bongo_cat_animations/src/body/standardbody1.c"
+#include "../lib/bongo_cat_animations/src/body/bodyeartwitch.c"
 
 // Face sprites  
-#include "animations/faces/stock_face.c"
-#include "animations/faces/happy_face.c"
-#include "animations/faces/blink_face.c"
-#include "animations/faces/sleepy_face.c"
+#include "../lib/bongo_cat_animations/src/faces/stock_face.c"
+#include "../lib/bongo_cat_animations/src/faces/happy_face.c"
+#include "../lib/bongo_cat_animations/src/faces/blink_face.c"
+#include "../lib/bongo_cat_animations/src/faces/sleepy_face.c"
 
 // Paw sprites
-#include "animations/paws/leftpawdown.c"
-#include "animations/paws/rightpawdown.c"
-#include "animations/paws/twopawsup.c"
+#include "../lib/bongo_cat_animations/src/paws/leftpawdown.c"
+#include "../lib/bongo_cat_animations/src/paws/rightpawdown.c"
+#include "../lib/bongo_cat_animations/src/paws/twopawsup.c"
 
 // Table sprites
-#include "animations/table/table1.c"
+#include "../lib/bongo_cat_animations/src/table/table1.c"
 
 // Effect sprites
-#include "animations/effects/left_click_effect.c"
-#include "animations/effects/right_click_effect.c"
-#include "animations/effects/sleepy1.c"
-#include "animations/effects/sleepy2.c"
-#include "animations/effects/sleepy3.c"
+#include "../lib/bongo_cat_animations/src/effects/left_click_effect.c"
+#include "../lib/bongo_cat_animations/src/effects/right_click_effect.c"
+#include "../lib/bongo_cat_animations/src/effects/sleepy1.c"
+#include "../lib/bongo_cat_animations/src/effects/sleepy2.c"
+#include "../lib/bongo_cat_animations/src/effects/sleepy3.c"
 
 // External declarations for all sprites
 extern const lv_img_dsc_t standardbody1;
