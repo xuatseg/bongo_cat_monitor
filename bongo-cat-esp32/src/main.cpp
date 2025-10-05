@@ -7,6 +7,7 @@
 #include "Free_Fonts.h"
 #include "animations_sprites.h"
 #include "touch_screen_lib.h"
+#include "AHT30.h"
 
 // Display settings
 #define SCREEN_WIDTH 240
@@ -46,6 +47,16 @@ TFT_eSPI tft = TFT_eSPI();
 
 // Touch screen library object
 TouchScreenLib touchScreen(&tft);
+
+// AHT30 sensor object (SCL=22, SDA=21)
+AHT30 aht30(21, 22);
+
+// AHT30 sensor data
+float temperature = 0.0;
+float humidity = 0.0;
+bool aht30_initialized = false;
+unsigned long last_sensor_read = 0;
+#define SENSOR_READ_INTERVAL 15000  // Read sensor every 15 seconds (avoid self-heating)
 
 // LVGL display buffer
 static lv_disp_draw_buf_t draw_buf;
@@ -866,6 +877,15 @@ void setup() {
     // Initialize touch screen
     initTouchScreen();
     
+    // Initialize AHT30 sensor
+    Serial.println("🌡️ Initializing AHT30 sensor...");
+    if (aht30.begin()) {
+        aht30_initialized = true;
+        Serial.println("✅ AHT30 sensor initialized successfully!");
+    } else {
+        Serial.println("❌ AHT30 sensor initialization failed!");
+    }
+    
     createBongoCat();
     
     // Apply loaded settings to display visibility now that UI is created
@@ -966,6 +986,20 @@ void loop() {
     if (current_time - last_time_update >= 1000) {
         updateTimeDisplay();
         last_time_update = current_time;
+    }
+    
+    // Read AHT30 sensor data periodically (every 15 seconds to avoid self-heating)
+    if (aht30_initialized && (current_time - last_sensor_read >= SENSOR_READ_INTERVAL)) {
+        if (aht30.readTemperatureAndHumidity(&temperature, &humidity)) {
+            Serial.print("🌡️ Temperature: ");
+            Serial.print(temperature, 1);
+            Serial.print("°C, Humidity: ");
+            Serial.print(humidity, 1);
+            Serial.println("% (15s interval)");
+        } else {
+            Serial.println("❌ Failed to read AHT30 sensor data");
+        }
+        last_sensor_read = current_time;
     }
     
     // Reduce LVGL timer handler frequency to prevent system overload
